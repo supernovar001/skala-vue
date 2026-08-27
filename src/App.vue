@@ -1,77 +1,95 @@
+// App.vue.exercise 내용과 동일함 //
 <script setup>
-// 1. 학습환경 구성
-import SampleOne from './components/practices/basic/SampleOne.vue'
-import SampleTwo from './components/practices/basic/SampleTwo.vue'
-
-// 2. Vue Directive
-import VueHtml from './components/practices/basic/VueHtml.vue'
-import VueHtmlXss from './components/practices/basic/VueHtmlXss.vue'
-import VueText from './components/practices/basic/VueText.vue'
-import VueBind from './components/practices/basic/VueBind.vue'
-import VueBindClass from './components/practices/basic/VueBindClass.vue'
-import VueBindStyle from './components/practices/basic/VueBindStyle.vue'
-import VueBindShorthand from './components/practices/basic/VueBindShorthand.vue'
-import VueIf from './components/practices/basic/VueIf.vue'
-import VueShow from './components/practices/basic/VueShow.vue'
-import VueFor from './components/practices/basic/VueFor.vue'
-import VuePre from './components/practices/basic/VuePre.vue'
-import VueCloak from './components/practices/basic/VueCloak.vue'
-import VueOnce from './components/practices/basic/VueOnce.vue'
-import VueMemo from './components/practices/basic/VueMemo.vue'
-
-// 3. Vue Event Handling
-import EventBasic from './components/practices/basic/EventBasic.vue'
-import EventObject from './components/practices/basic/EventObject.vue'
-import EventModifier from './components/practices/basic/EventModifier.vue'
-
-// 4. Vue Form Handling
-import ModelBasic from './components/practices/basic/ModelBasic.vue'
-import ModelForm from './components/practices/basic/ModelForm.vue'
-import ModelModifier from './components/practices/basic/ModelModifier.vue'
-
-// 5. Vue Style Handling
-import StyleScoped from './components/practices/basic/StyleScoped.vue'
+import WeatherMockup from './components/exercise/WeatherMockup.vue'
+import WeatherComposition from './components/exercise/WeatherComposition.vue'
+import WeatherParent from './components/exercise/WeatherParent.vue'
+import WeatherAPI from './components/exercise/WeatherAPI.vue'
+import WeatherAxios from './components/exercise/WeatherAxios.vue'
+import WeatherMetar from './components/exercise/WeatherMetar.vue'
+import UnitToggler from './components/exercise/UnitToggler.vue'
 </script>
 
 <template>
-  <div class="practice-container">
-    <h1>1. 학습환경구성</h1>
+  <div class="app-container">
+    <h1>⛅ 과제 2: 날씨 (Mockup)</h1>
     <hr />
-    <SampleOne />
-    <SampleTwo />
-    <h1>2. Vue Directive</h1>
+    <WeatherMockup />
+  </div>
+
+  <div class="app-container">
+    <h1>⛅ 과제 3: 날씨 (컴포지션)</h1>
     <hr />
-    <VueHtml />
-    <VueHtmlXss />
-    <VueText />
-    <VueBind />
-    <VueBindClass />
-    <VueBindStyle />
-    <VueBindShorthand />
-    <VueIf />
-    <VueShow />
-    <VueFor />
-    <VuePre />
-    <VueCloak />
-    <VueOnce />
-    <VueMemo />
-    <h1>3. Vue Event Handling</h1>
+    <WeatherComposition />
+  </div>
+
+  <div class="app-container">
+    <h1>⛅ 과제 4: 날씨 (컴포넌트)</h1>
     <hr />
-    <EventBasic />
-    <EventObject />
-    <EventModifier />
-    <h1>4. Vue Form Handling</h1>
+    <WeatherParent />
+  </div>
+
+
+  <div class="app-container">
+    <h1>⛅ 과제 5: 라우터적용</h1>
     <hr />
-    <ModelBasic />
-    <ModelForm />
-    <ModelModifier />
-    <h1>5. Vue Style Handling</h1>
+    <div class="dashboard-wrapper">
+      <nav class="navigation-bar">
+        <RouterLink to="/" class="nav-item">🌦️ 날씨 대시보드</RouterLink>
+        <span class="divider">|</span>
+        <RouterLink to="/about" class="nav-item">ℹ️ 서비스 소개</RouterLink>
+        <span class="divider">|</span>
+        <RouterLink to="/stats" class="nav-item">📊 날씨 통계</RouterLink>
+      </nav>
+      <main>
+        <RouterView />
+        <!-- RouterView v-slot="{ Component }">
+          <KeepAlive>
+            <component :is="Component" />
+          </KeepAlive>
+        </RouterView-->
+      </main>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <h1>⛅ 과제 6: 스토어적용</h1>
     <hr />
-    <StyleScoped />
+    <div class="dashboard-wrapper">
+      <nav class="navigation-bar">
+        <RouterLink to="/" class="nav-item">🌦️ 날씨 대시보드</RouterLink>
+        <span class="divider">|</span>
+        <RouterLink to="/about" class="nav-item">ℹ️ 서비스 소개</RouterLink>
+        <UnitToggler />
+      </nav>
+      <main>
+        <RouterView />
+      </main>
+    </div>
+  </div>
+
+
+  <div class="app-container">
+    <h1>⛅ 과제 7: 날씨 (Axios + 외부 API 연동)</h1>
+    <p>상세보기 클릭 시에 습도, 풍속, 일출, 일몰, 3시간 간격예보가 나타납니다</p>
+    <hr />
+    <WeatherAxios />
+  </div>
+<!--
+  <div class="app-container">
+    <h1>⛅ 과제 6: 날씨 (UI Library - daisyUI)</h1>
+    <hr />
+    <WeatherAPI />
+  </div> -->
+
+  <div class="app-container">
+    <h1>⛅ 과제 8: 날씨 (UI Library with 기상청 METAR)</h1>
+    <hr />
+    <WeatherAPI />
+    <WeatherMetar />
   </div>
 </template>
 
 <style>
 /* ⚠️ 외부 스타일 파일(예: 버튼 디자인 뭉치)을 이 방 안으로 쏙 가리켜 가져옵니다 */
-@import '@/assets/practice.css';
+@import '@/assets/exercise.css';
 </style>

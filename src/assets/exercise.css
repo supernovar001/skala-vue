@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
 /* 1. 전체 최외곽 컨테이너 레벨 정의 */
 .app-container {
   max-width: 900px;
@@ -124,6 +127,13 @@ input {
   padding: 6px 10px;
   cursor: pointer;
 }
+.btn-favorite {
+  position: absolute;
+  right: 12px;
+  top: 50px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
 .status-bar {
   background: #e8f5e9;
   padding: 10px;
@@ -131,4 +141,15 @@ input {
   color: #2e7d32;
   font-weight: bold;
   border-radius: 6px;
+}
+/*  실습 1 weatherMockup과 함께 사용 */
+.weather-card { border-radius: 12px; padding: 16px; color: #222; background-size: cover; background-position: center; }
+.weather-card.sunny { background: linear-gradient(135deg, #fff4b1, #fffdf9); }
+.weather-card.rainy { background: linear-gradient(135deg, #b7c9e2, #7f9bbd); color: #0f172a; }
+.weather-card.cloudy { background: linear-gradient(135deg, #d9dde3, #b8c2cc); }
+.weather-card.snowy { background: linear-gradient(135deg, #f8fbff, #dbeafe); }
+.weather-message {
+  margin: 8px 0;
+  font-size: 14px;
+  font-weight: 600;
 }

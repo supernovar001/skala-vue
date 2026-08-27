@@ -25,7 +25,7 @@ onMounted(async () => {
   if (targetCity) {
     isLoading.value = true
     try {
-      const API_KEY = '8964edc63b366d27b5b728b7976570b7'
+      const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY' // 실제 값은 .env의 VITE_OPENWEATHER_API_KEY로 관리
       // 🟢 [고도화] 가짜 Mock 객체 대신, 실제 고유 타깃 도시 주소를 정밀 저격 호출
       const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${targetCity.english}&appid=${API_KEY}&units=metric&lang=kr`)
 
