@@ -2146,22 +2146,63 @@ location / {
 
 ***
 
-## 추가.(트러블슈팅) Vercel에 배포하기
+## 추가. (트러블슈팅) Vercel에 배포하기
+
+<br />
 
 ### 1. OpenWeather API
 
-* **배경:** 로컬 개발 환경에서는 `.env` 파일을 통해 OpenWeather API Key를 관리하였으나, `.env` 파일은 GitHub에 업로드하지 않도록 설정하였습니다.
-* **사유:** Vercel 배포 환경에서는 로컬 `.env` 파일을 사용할 수 없으므로 배포 환경에 별도로 API Key를 등록해야 했습니다.
-* **적용:** `VITE_*` 클라이언트 환경변수를 Vercel Environment Variable에 등록하여 OpenWeather API를 연동하였습니다.
+* **배경** : 로컬 개발 환경에서는 `.env` 파일로 OpenWeather API Key(`VITE_OPENWEATHER_API_KEY`)를 관리하였고, `.env`는 git에 올리지 않도록 이미 `.gitignore`에 제외해두었다.
+
+* **사유** : Vercel 배포 환경에는 로컬 `.env` 파일이 존재하지 않으므로, 배포 환경에도 별도로 키를 등록해야 했다.
+
+* **적용** : Vercel 프로젝트의 Environment Variable에 `VITE_OPENWEATHER_API_KEY`를 그대로 등록하였다. `VITE_` 접두사가 붙은 값은 어차피 Vite 빌드 시점에 클라이언트 번들에 그대로 포함되므로(9일차에서 확인한 한계와 동일), 클라이언트 환경변수 방식으로도 문제가 없었다.
+
+<br />
 
 ### 2. 기상청 항공기상 API (METAR / SIGMET)
 
-* **배경:** 기상청 항공기상 API도 OpenWeather API와 동일하게 Vercel Environment Variable을 이용한 클라이언트 환경변수 방식으로 연동을 시도하였습니다.
-* **사유:** 해당 방식에서는 기상청 API 인증키가 클라이언트에 노출될 수 있고, 기존 방식으로는 배포 환경에서 정상적인 API 연동이 이루어지지 않았습니다.
-* **적용:** 기상청 API 인증키 노출을 방지하기 위해 `VITE_*` 클라이언트 환경변수 대신 **Vercel Sensitive Environment Variable**을 사용하고, **Vercel Function을 Proxy 서버로 구성하여 METAR API를 서버 측에서 호출하도록 개선하였습니다.**
+* **배경** : 처음에는 OpenWeather와 동일하게 `VITE_KMA_AUTH_KEY`라는 이름의 클라이언트 환경변수로 선언하고, `vercel.json`의 `rewrites`(`/kma-api/* → apihub.kma.go.kr/*`)로 로컬 `vite.config.js`의 dev 프록시를 배포 환경에서도 재현하려 하였다.
 
-성하여 METAR API를 서버 측에서 호출하도록 개선하였습니다.
+* **문제** : `VITE_*`로 선언한 값은 빌드 시점에 JS 번들에 그대로 문자열로 박히기 때문에, 기상청 API 인증키(`authKey`)가 브라우저 네트워크 탭·번들 파일에서 그대로 노출된다. OpenWeather 키와 달리 기상청 authKey는 "활용신청" 승인 단위로 발급되는 개인 키라 노출 부담이 더 크다고 판단하였다.
+
+* **원인 정리**
+
+  1. **선언 방식 차이** : SIGMET·METAR는 OpenWeather처럼 `VITE_` 접두사로 선언하지 않았다 — 애초에 클라이언트에 노출시키지 않는 것이 목표였기 때문이다.
+
+  2. **키 노출 방지 목적** : `VITE_KMA_AUTH_KEY`를 그대로 썼다면 구현 자체는 `vercel.json` rewrite만으로 간단히 끝났겠지만, 그러면 인증키가 클라이언트에 노출된다. 이를 막기 위해 인증키를 서버 전용 Secret인 `KMA_AUTH_KEY`(비-`VITE_` 이름)로 바꾸면서, 그 값을 실제로 사용할 서버 쪽 코드(Vercel Function)가 추가로 필요해져 구조가 한 단계 복잡해졌다.
+
+* **적용** : 기상청 authKey는 **Vercel Environment Variable에 `KMA_AUTH_KEY`**(`VITE_` 접두사 없이) 이름으로만 등록하고, **Vercel Function을 서버 측 Proxy**로 구성하여 METAR/SIGMET 요청을 대신 호출하도록 변경하였다. 프론트엔드는 인증키를 아예 알지 못하고 `/api/kma`만 호출한다.
 
 ```
+# 파일명 : api/kma.js  (Vercel Function, 브라우저가 아니라 Vercel 서버에서 실행됨)
+export default async function handler(request, response) {
+  const { type = 'metar', icao } = request.query
+
+  // process.env.KMA_AUTH_KEY는 서버(Vercel Function) 안에서만 읽히므로
+  // Vue 번들에는 포함되지 않는다.
+  const authKey = process.env.KMA_AUTH_KEY
+
+  const endpoint = type === 'sigmet' ? 'getSigmet' : 'getMetar'
+  const params = new URLSearchParams({ pageNo: '1', numOfRows: '10', dataType: 'XML', authKey })
+  if (type === 'metar') params.set('icao', icao)
+
+  const url = `https://apihub.kma.go.kr/api/typ02/openApi/AmmIwxxmService/${endpoint}?${params.toString()}`
+  const kmaResponse = await fetch(url)
+  response.status(kmaResponse.status).send(await kmaResponse.text())
+}
 ```
+
+```
+# 파일명 : WeatherMetar.vue
+// const KMA_AUTH_KEY = import.meta.env.VITE_KMA_AUTH_KEY  ← 브라우저에서 키를 읽지 않도록 주석 처리
+
+const res = await axios.get('/api/kma', {
+  params: { type: 'metar', icao: airport.id },
+})
+```
+
+정리하면, OpenWeather는 클라이언트 환경변수(`VITE_*`) 그대로도 무방했지만, 기상청 authKey는 승인 단위 개인 키라는 성격상 **서버 전용 Secret + Vercel Function 프록시** 구조로 한 단계 더 감싸서 배포하였다.
+
+***
 
