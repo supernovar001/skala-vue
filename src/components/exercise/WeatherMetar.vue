@@ -8,7 +8,7 @@
 import { ref, computed, watch, watchEffect, onMounted } from 'vue'
 import axios from 'axios'
 
-const KMA_AUTH_KEY = import.meta.env.VITE_KMA_AUTH_KEY
+// const KMA_AUTH_KEY = import.meta.env.VITE_KMA_AUTH_KEY 이 코드를 주석처리하여 브라우저에서 키를 읽지 않게했다.
 
 // 요구사항 1 : 항공기상관측(METAR) 대상 공항 (서울/수원/부산 대신 실제 METAR가 제공되는 공항으로 구성)
 const airports = [
@@ -76,10 +76,14 @@ const parseMetarXml = (xmlText) => {
 }
 
 const fetchAirportWeather = async (airport) => {
-  const res = await axios.get('/kma-api/api/typ02/openApi/AmmIwxxmService/getMetar', {
+  const res = await axios.get('/api/kma', {
     responseType: 'text',
-    params: { pageNo: 1, numOfRows: 10, dataType: 'XML', icao: airport.id, authKey: KMA_AUTH_KEY },
+    params: {
+      type: 'metar',
+      icao: airport.id,
+    },
   })
+
   const parsed = parseMetarXml(res.data)
   if (!parsed || parsed.temp == null) {
     return { id: airport.id, name: airport.name, temp: null, status: '관측자료 없음', icon: '❔', theme: 'cloudy' }
@@ -124,9 +128,11 @@ const sigmetLoading = ref(false)
 const fetchSigmet = async () => {
   sigmetLoading.value = true
   try {
-    const res = await axios.get('/kma-api/api/typ02/openApi/AmmIwxxmService/getSigmet', {
+    const res = await axios.get('/api/kma', {
       responseType: 'text',
-      params: { pageNo: 1, numOfRows: 10, dataType: 'XML', authKey: KMA_AUTH_KEY },
+      params: {
+        type: 'sigmet',
+      },
     })
     sigmetText.value = res.data
   } catch (error) {
